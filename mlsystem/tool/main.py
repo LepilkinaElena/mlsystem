@@ -7,6 +7,7 @@ from optparse import OptionParser, OptionGroup, Option, OptionValueError
 from copy import copy
 import contextlib
 import mlsystem.util.multitool
+import mlsystem.dataset.dataset as dataset
 from mlsystem.parser.parser import RuleParser
 
 def pair(arg):
@@ -30,6 +31,13 @@ def action_start_train(name, args):
                       help="file with description of rule for best result", 
                       default=None)
 
+    parser.add_option("", "--option", dest="option", type=str,
+                      help="option for training", 
+                      default=None)
+    parser.add_option("", "--values", dest="values", type=str,
+                      help="values assotiated with runs", 
+                      default=None)
+
     (opts, args) = parser.parse_args(args)
     runs = []
     for run in opts.runs:
@@ -38,12 +46,22 @@ def action_start_train(name, args):
 
     # Parse file:
     if not opts.rule_file:
-        parser.error("file with rule description is nessecary!")
+        parser.error("File with rule description is nessecary!")
+    if not opts.option:
+        parser.error("Option is nessecary!")
+    if not opts.values and runs:
+        parser.error("Values for option in runs are nessecary!")
+
+    
+    print(opts.values)
+    values = check_pair(opts.values)
     with open(opts.rule_file) as rule_content:
         rule = rule_content.read().replace('\n', '').replace(' ', '')
         rule_parser = RuleParser()
         stack = rule_parser.parse(rule)
-        print(stack)
+        dataset_producer = dataset.DatasetProducer(runs, values, rule_parser, stack)
+        data_set = dataset_producer.next_batch(100)
+        print(data_set.size())
 
 tool = mlsystem.util.multitool.MultiTool(locals())
 

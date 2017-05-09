@@ -69,7 +69,6 @@ class RuleParser(object):
         rule = re.match(r'(min|max)\s*\((.+)\)', rule_string)
         if rule:
             self.criteria = rule.group(1)
-            print(rule.group(2))
             results = self.bnf.parseString(rule.group(2), True)
             return self.exprStack
 
@@ -87,5 +86,11 @@ class RuleParser(object):
             return self.fn[op](self.eval(stack, value_dict))
         else:
             return float(op)
+
+    def better_value(self, first, second):
+        if self.criteria == 'min':
+            return first < second
+        else:
+            return first > second
 
 #val = self.eval(self.exprStack[:])
